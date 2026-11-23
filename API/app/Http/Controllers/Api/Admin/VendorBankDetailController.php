@@ -13,10 +13,10 @@ class VendorBankDetailController extends Controller
 {
     use ApiResponseTrait;
 
-    public function index(Request $request)
+    public function index(Request $request, $vendor_id)
     {
         try {
-            $query = VendorBankDetail::with('vendor')->latest('id');
+            $query = VendorBankDetail::with('vendor:id,owner_name,business_name,phone,email')->where('vendor_id', $vendor_id)->latest('id');
 
             if ($request->filled('vendor_id')) {
                 $query->where('vendor_id', $request->vendor_id);
@@ -45,19 +45,20 @@ class VendorBankDetailController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $vendor_id)
     {
         try {
             $request->validate([
-                'vendor_id' => 'required|exists:vendors,id',
                 'bank_name' => 'required|string|max:255',
                 'account_number' => 'required|string|max:100',
                 'account_holder_name' => 'required|string|max:255',
                 'ifsc_code' => 'required|string|max:20'
             ]);
 
+
+
             $data = [
-                'vendor_id' => $request->vendor_id,
+                'vendor_id' => $vendor_id,
                 'bank_name' => $request->bank_name,
                 'account_number' => $request->account_number,
                 'account_holder_name' => $request->account_holder_name,
@@ -85,7 +86,7 @@ class VendorBankDetailController extends Controller
 
     public function show($id)
     {
-        $bankDetail = VendorBankDetail::with('vendor')->find($id);
+        $bankDetail = VendorBankDetail::with('vendor:id,owner_name,business_name,phone,email')->find($id);
 
         if (!$bankDetail) {
             return $this->errorResponse('Vendor bank detail not found.', 404);
@@ -98,17 +99,16 @@ class VendorBankDetailController extends Controller
         return $this->successResponse($bankDetail, 'Vendor bank detail fetched successfully.');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, $vendor_id)
     {
         try {
-            $bankDetail = VendorBankDetail::find($id);
+            $bankDetail = VendorBankDetail::where('vendor_id', $vendor_id)->find($id);
 
             if (!$bankDetail) {
                 return $this->errorResponse('Vendor bank detail not found.', 404);
             }
 
             $request->validate([
-                'vendor_id' => 'nullable|exists:vendors,id',
                 'bank_name' => 'nullable|string|max:255',
                 'account_number' => 'nullable|string|max:100',
                 'account_holder_name' => 'nullable|string|max:255',
@@ -117,7 +117,7 @@ class VendorBankDetailController extends Controller
 
             $data = [];
 
-            foreach (['vendor_id', 'bank_name', 'account_number', 'account_holder_name', 'ifsc_code', 'upi_id'] as $field) {
+            foreach (['bank_name', 'account_number', 'account_holder_name', 'ifsc_code', 'upi_id'] as $field) {
                 if ($request->has($field)) {
                     $data[$field] = $request->input($field);
                 }
@@ -146,10 +146,10 @@ class VendorBankDetailController extends Controller
         }
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id, $vendor_id)
     {
         try {
-            $bankDetail = VendorBankDetail::find($id);
+            $bankDetail = VendorBankDetail::where('vendor_id', $vendor_id)->find($id);
 
             if (!$bankDetail) {
                 return $this->errorResponse('Vendor bank detail not found.', 404);

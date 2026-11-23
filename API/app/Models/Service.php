@@ -13,14 +13,12 @@ class Service extends Model
         'vendor_id',
         'category_id',
         'subcategory_id',
-        'price_type_id',
         'unit_id',
         'name',
         'slug',
         'short_description',
         'description',
         'price',
-        'min_price',
         'max_price',
         'image',
         'experience',
@@ -32,6 +30,12 @@ class Service extends Model
         'sort_order',
         'created_by',
         'updated_by'
+    ];
+
+    protected $casts = [
+        'attributes' => 'array',
+        'status' => 'boolean',
+        'is_verified' => 'boolean',
     ];
 
     public function vendor()
@@ -48,12 +52,7 @@ class Service extends Model
     {
         return $this->belongsTo(Category::class);
     }
-
-    public function priceType()
-    {
-        return $this->belongsTo(Price::class);
-    }
-
+   
     public function unit()
     {
         return $this->belongsTo(Unit::class);

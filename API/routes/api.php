@@ -2,14 +2,17 @@
 
 use App\Http\Controllers\Api\Admin\VendorBankDetailController;
 use App\Http\Controllers\Api\Admin\VendorAddressController;
+use App\Http\Controllers\Api\Admin\DeliveryZoneController;
 use App\Http\Controllers\Api\Admin\CategoryController;
 use App\Http\Controllers\Api\Admin\CountryController;
+use App\Http\Controllers\Api\Admin\ServiceController;
+use App\Http\Controllers\Api\Admin\EnquiryController;
 use App\Http\Controllers\Api\Admin\VendorController;
 use App\Http\Controllers\Api\Admin\SliderController;
 use App\Http\Controllers\Api\Admin\StateController;
 use App\Http\Controllers\Api\Admin\AuthController;
 use App\Http\Controllers\Api\Admin\CityController;
-use App\Http\Controllers\Api\Admin\DeliveryZoneController;
+use App\Http\Controllers\Api\Admin\UnitController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
@@ -29,6 +32,12 @@ Route::prefix('admin')->group(function () {
             Route::post('/{id}', [CategoryController::class, 'update']); 
             Route::delete('/{id}', [CategoryController::class, 'destroy']); 
             Route::get('/{id}/status', [CategoryController::class, 'changeStatus']); 
+        });
+
+        // Unit
+        Route::prefix('units')->group(function () 
+        { 
+            Route::get('/', [UnitController::class, 'index']); 
         });
 
         //Sliders
@@ -62,12 +71,12 @@ Route::prefix('admin')->group(function () {
         });
 
         // Vendor Bank Detail
-        Route::prefix('vendor-bank-details')->group(function () {
-            Route::get('/', [VendorBankDetailController::class, 'index']);
-            Route::post('/', [VendorBankDetailController::class, 'store']);
-            Route::get('/{id}', [VendorBankDetailController::class, 'show']);
-            Route::post('/{id}', [VendorBankDetailController::class, 'update']);
-            Route::delete('/{id}', [VendorBankDetailController::class, 'destroy']);
+        Route::prefix('vendor-bank')->group(function () {
+            Route::get('/{vendor_id}', [VendorBankDetailController::class, 'index']);
+            Route::post('/{vendor_id}', [VendorBankDetailController::class, 'store']);
+            Route::get('/{id}/{vendor_id}', [VendorBankDetailController::class, 'show']);
+            Route::post('/{id}/{vendor_id}', [VendorBankDetailController::class, 'update']);
+            Route::delete('/{id}/{vendor_id}', [VendorBankDetailController::class, 'destroy']);
         });
 
         // Country
@@ -104,6 +113,25 @@ Route::prefix('admin')->group(function () {
             Route::get('/{id}', [DeliveryZoneController::class, 'show']);
             Route::post('/{id}', [DeliveryZoneController::class, 'update']);
             Route::delete('/{id}', [DeliveryZoneController::class, 'destroy']);
+        });
+
+        // Service
+        Route::prefix('services')->group(function () {
+            Route::get('/', [ServiceController::class, 'index']);
+            Route::post('/', [ServiceController::class, 'store']);
+            Route::get('/{id}', [ServiceController::class, 'show']);
+            Route::post('/{id}', [ServiceController::class, 'update']);
+            Route::delete('/{id}', [ServiceController::class, 'destroy']);
+            Route::get('/{id}/status', [ServiceController::class, 'changeStatus']);
+        });
+
+        // Enquiry
+        Route::prefix('enquiries')->group(function () {
+            Route::get('/', [EnquiryController::class, 'index']);
+            Route::post('/', [EnquiryController::class, 'store']);
+            Route::get('/{id}', [EnquiryController::class, 'show']);
+            Route::post('/{id}', [EnquiryController::class, 'update']);
+            Route::delete('/{id}', [EnquiryController::class, 'destroy']);
         });
     });
 

@@ -125,7 +125,7 @@ class VendorAddressController extends Controller
 
     public function show($id, $vendor_id)
     {
-        $address = VendorAddress::with(['vendor:id,business_name,owner_name,phone,email', 'country:id,name', 'state:id,name', 'city:id,name', 'deliveryZone:id,city_name,pincode'])->find($id);
+        $address = VendorAddress::with(['vendor:id,business_name,owner_name,phone,email', 'country:id,name', 'state:id,name', 'city:id,name', 'deliveryZone:id,city_name,pincode'])->where('id', $id)->where('vendor_id', $vendor_id)->first();
 
         if (!$address) {
             return $this->errorResponse('Vendor address not found.', 404);
@@ -165,16 +165,20 @@ class VendorAddressController extends Controller
             $data = [];
 
             foreach ([
-                'address_1', 'address_2', 'sector', 'landmark',
-                'country_id', 'state_id', 'city_id', 'delivery_zone_id',
-                'gst_number', 'pan_number', 'alternate_phone', 'business_email',
-                'website', 'description', 'latitude', 'longitude',
-                'fssai_number', 'fssai_expiry_date', 'status'
-            ] as $field) {
-                if ($request->has($field)) {
-                    $data[$field] = $request->input($field);
-                }
-            }
+                        'address_1', 'address_2', 'sector', 'landmark',
+                        'country_id', 'state_id', 'city_id', 'delivery_zone_id',
+                        'gst_number', 'pan_number', 'alternate_phone', 'business_email',
+                        'website', 'description', 'latitude', 'longitude',
+                        'fssai_number', 'fssai_expiry_date', 'status'
+                    ] as $field) {
+                        if ($request->has($field)) {
+                            $data[$field] = $field === 'fssai_expiry_date'
+                                ? ($request->filled($field)
+                                    ? \Carbon\Carbon::createFromFormat('d-m-Y', $request->input($field))->format('Y-m-d')
+                                    : null)
+                                : $request->input($field);
+                        }
+                    }
 
             foreach (['shop_image', 'pan_card_image', 'aadhaar_front_image', 'aadhaar_back_image'] as $field) {
                 if ($request->hasFile($field)) {
