@@ -20,6 +20,7 @@ class ServiceController extends Controller
             'search'       => 'nullable|string|max:255',
             'vendor_id'    => 'nullable|integer|exists:vendors,id',
             'category_id'  => 'nullable|integer|exists:categories,id',
+            'subcategory_id' => 'nullable|integer|exists:categories,id',
             'status'       => 'nullable|boolean',
             'is_verified'  => 'nullable|boolean',
             'per_page'     => 'nullable|integer|min:1|max:100',
@@ -41,7 +42,7 @@ class ServiceController extends Controller
             });
         }
 
-        foreach (['vendor_id', 'category_id', 'status', 'is_verified'] as $field) {
+        foreach (['vendor_id', 'category_id', 'subcategory_id', 'status', 'is_verified'] as $field) {
             if (array_key_exists($field, $filters)) {
                 $query->where($field, $filters[$field]);
             }

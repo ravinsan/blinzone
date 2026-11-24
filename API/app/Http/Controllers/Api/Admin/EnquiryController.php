@@ -16,16 +16,10 @@ class EnquiryController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->validate([
-            'search'   => 'nullable|string|max:255',
-            'status'   => 'nullable|string|max:50',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
+        $query = Enquiry::with('service:id,name', 'unit:id,name');
 
-        $query = Enquiry::query();
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
+        if (!empty($request->search)) {
+            $search = $request->search;
 
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -34,19 +28,19 @@ class EnquiryController extends Controller
             });
         }
 
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if (!empty($request->status)) {
+            $query->where('status', $request->status);
         }
 
         return $this->successResponse(
-            $query->latest('id')->paginate($filters['per_page'] ?? 10),
+            $query->latest('id')->paginate($request->per_page ?? 10),
             'Enquiry list fetched successfully.'
         );
     }
 
     public function show($id)
     {
-        $enquiry = Enquiry::find($id);
+        $enquiry = Enquiry::with('service:id,name', 'unit:id,name')->find($id);
 
         if (!$enquiry) {
             return $this->errorResponse('Enquiry not found.', 404);
@@ -75,13 +69,13 @@ class EnquiryController extends Controller
             'service_id'      => 'nullable|integer|exists:services,id',
             'name'            => 'required|string|max:255',
             'phone'           => 'required|string|max:30',
-            'email'           => 'nullable|email|max:255',
-            'address'         => 'nullable|string',
-            'city'            => 'nullable|string|max:100',
-            'state'           => 'nullable|string|max:100',
-            'pincode'         => 'nullable|string|max:20'
+            'email'           => 'required|email|max:255',
+            'address'         => 'required|string',
+            'city'            => 'required|string|max:100',
+            'state'           => 'required|string|max:100',
+            'pincode'         => 'required|string|max:20'
         ]);
-
+        $data['preferred_date'] = $request->preferred_date ? date('Y-m-d', strtotime($request->preferred_date)) : null  ;
         $enquiry = Enquiry::create($data);
 
         return $this->successResponse(
@@ -111,7 +105,7 @@ class EnquiryController extends Controller
             'pincode'         => 'sometimes|nullable|string|max:20',
             'status'          => 'sometimes|string|max:50'
         ]);
-
+        $data['preferred_date'] = $request->preferred_date ? date('Y-m-d', strtotime($request->preferred_date)) : null  ;
         $enquiry->update($data);
 
         return $this->successResponse(
