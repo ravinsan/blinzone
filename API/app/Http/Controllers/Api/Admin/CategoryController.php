@@ -19,73 +19,98 @@ class CategoryController extends Controller
      * Category List
      */
 
-public function index(Request $request)
-{
-    try {
+    public function index(Request $request)
+    {
+        try {
 
-        $query = Category::with('parent:id,name,slug,image');
+            $query = Category::with('parent:id,name,slug,image');
 
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
+            // Search
+            if ($request->filled('search')) {
+                $search = $request->search;
 
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('slug', 'LIKE', "%{$search}%");
-            });
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('slug', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Status filter
+            if ($request->has('status') && $request->status !== '') {
+                $query->where('status', $request->status);
+            }
+
+            // Parent category filter
+            if ($request->filled('parent_id')) {
+                $query->where('parent_id', $request->parent_id);
+            }
+
+            /** @var LengthAwarePaginator $categories */
+            $categories = $query
+                ->latest('id')
+                ->paginate($request->get('per_page', 10));
+
+            $categories->setCollection(
+                $categories->getCollection()->map(function ($category) {
+
+                    // Category image
+                    if ($category->image) {
+                        $category->image = url('storage/' . $category->image);
+                    }
+
+                    // Parent category image
+                    if ($category->parent && $category->parent->image) {
+                        $category->parent->image = url(
+                            'storage/' . $category->parent->image
+                        );
+                    }
+
+                    return $category;
+                })
+            );
+
+            return $this->successResponse(
+                $categories,
+                'Category list fetched successfully.'
+            );
+
+        } catch (\Throwable $e) {
+
+            Log::error('Category List Error', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    public function subCategories($id)
+    {
+        $category = Category::find($id);
+
+        if (!$category) {
+            return $this->errorResponse('Category not found.', 404);
         }
 
-        // Status filter
-        if ($request->has('status') && $request->status !== '') {
-            $query->where('status', $request->status);
-        }
-
-        // Parent category filter
-        if ($request->filled('parent_id')) {
-            $query->where('parent_id', $request->parent_id);
-        }
-
-        /** @var LengthAwarePaginator $categories */
-        $categories = $query
+        $subCategories = $category->subcategory()
             ->latest('id')
-            ->paginate($request->get('per_page', 10));
+            ->get();
 
-        $categories->setCollection(
-            $categories->getCollection()->map(function ($category) {
+        $subCategories->transform(function ($subcategory) {
+            if ($subcategory->image) {
+                $subcategory->image = url('storage/' . $subcategory->image);
+            }
 
-                // Category image
-                if ($category->image) {
-                    $category->image = url('storage/' . $category->image);
-                }
-
-                // Parent category image
-                if ($category->parent && $category->parent->image) {
-                    $category->parent->image = url(
-                        'storage/' . $category->parent->image
-                    );
-                }
-
-                return $category;
-            })
-        );
+            return $subcategory;
+        });
 
         return $this->successResponse(
-            $categories,
-            'Category list fetched successfully.'
+            $subCategories,
+            'Subcategories fetched successfully.'
         );
-
-    } catch (\Throwable $e) {
-
-        Log::error('Category List Error', [
-            'message' => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-        ]);
-
-        throw $e;
     }
-}
-
 
     /**
      * Create Category

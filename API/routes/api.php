@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\VendorBankDetailController;
 use App\Http\Controllers\Api\Admin\VendorAddressController;
 use App\Http\Controllers\Api\Admin\DeliveryZoneController;
+use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\CategoryController;
 use App\Http\Controllers\Api\Admin\CountryController;
 use App\Http\Controllers\Api\Admin\ServiceController;
@@ -10,10 +11,15 @@ use App\Http\Controllers\Api\Admin\EnquiryController;
 use App\Http\Controllers\Api\Admin\VendorController;
 use App\Http\Controllers\Api\Admin\SliderController;
 use App\Http\Controllers\Api\Admin\StateController;
+use App\Http\Controllers\Api\Admin\AdminController;
 use App\Http\Controllers\Api\Admin\AuthController;
 use App\Http\Controllers\Api\Admin\CityController;
 use App\Http\Controllers\Api\Admin\UnitController;
+use App\Http\Controllers\Api\Admin\MenuController;
+use App\Http\Controllers\Api\Admin\RoleController;
+use App\Http\Controllers\Api\Admin\UserController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::prefix('admin')->group(function () {
 
@@ -32,6 +38,7 @@ Route::prefix('admin')->group(function () {
             Route::post('/{id}', [CategoryController::class, 'update']); 
             Route::delete('/{id}', [CategoryController::class, 'destroy']); 
             Route::get('/{id}/status', [CategoryController::class, 'changeStatus']); 
+            Route::get('/sub-categories/{id}', [CategoryController::class, 'subCategories']);
         });
 
         // Unit
@@ -133,6 +140,28 @@ Route::prefix('admin')->group(function () {
             Route::post('/{id}', [EnquiryController::class, 'update']);
             Route::delete('/{id}', [EnquiryController::class, 'destroy']);
         });
+
+        Route::resources([
+            'menus'              => MenuController::class,
+            'permissions'        => PermissionController::class,
+            'roles'              => RoleController::class,
+            'users'              => UserController::class,
+        ]);
+
+        /* Menu */
+        Route::get('/menus/status/{id}', [MenuController::class, 'statusChange'])->name('menus.status');
+        Route::post('/menus/sub-menu', [MenuController::class, 'fetchSubmenu'])->name('menus.submenu');
+
+        /* Permission */
+        Route::get('/permissions/status/{id}', [PermissionController::class, 'statusChange'])->name('permissions.status');
+
+        /* User */
+        Route::get('/users/status/{id}', [UserController::class, 'statusChange'])->name('users.status');
+
+        /* Change Password */
+        Route::get('/change-password', [AdminController::class, 'changPassword'])->name('change.password');
+        Route::post("/update-password", [AdminController::class, 'updatePassword'])->name('password.update');
+
     });
 
 });
